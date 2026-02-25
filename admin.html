@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Jadwal Dosen</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Iconify -->
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: '#38bdf8',
+                            glow: '#0ea5e9',
+                            dark: '#020204',
+                            panel: '#0A0B10',
+                            border: 'rgba(255,255,255,0.08)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Instrument Serif', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #020204;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .font-serif { font-family: 'Instrument Serif', serif; }
+        
+        .glass-panel {
+            background: linear-gradient(180deg, rgba(56,189,248,0.03) 0%, rgba(255,255,255,0.01) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(to bottom right, #ffffff, #38bdf8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
+        
+        input, select, textarea {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: rgba(56,189,248,0.5);
+        }
+        
+        .tab-active {
+            background: rgba(56,189,248,0.2);
+            color: #38bdf8;
+            border-color: rgba(56,189,248,0.3);
+        }
+        
+        /* Smooth transition untuk content */
+        #contentList, #contentAdd {
+            transition: opacity 0.3s ease;
+        }
+        
+        #contentList.hidden, #contentAdd.hidden {
+            display: none !important;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="text-white antialiased overflow-x-hidden">
+    <!-- Background Glow -->
+    <div class="fixed inset-0 pointer-events-none" style="background: radial-gradient(circle at 50% 0%, #0ea5e9 0%, transparent 50%); opacity: 0.15;"></div>
+    <div class="fixed inset-0 bg-grid pointer-events-none opacity-50"></div>
+    
+    <!-- Navigation -->
+    <nav class="fixed top-4 md:top-6 left-1/2 -translate-x-1/2 w-[95%] md:w-[92%] max-w-5xl z-50">
+        <div class="glass-panel rounded-full px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-brand-primary/20 flex items-center justify-center">
+                    <span class="iconify text-brand-primary text-lg" data-icon="lucide:settings"></span>
+                </div>
+                <span class="font-semibold text-sm">Admin Panel</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="px-4 py-2 text-xs font-semibold glass-panel rounded-full hover:border-brand-primary/30 transition-all duration-300 flex items-center gap-2">
+                    <span class="iconify" data-icon="lucide:arrow-left"></span>
+                    <span class="hidden sm:inline">Kembali</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="relative pt-32 md:pt-40 pb-20 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h1 class="font-serif text-4xl md:text-5xl tracking-tight mb-4">
+                    Admin Panel
+                </h1>
+                <p class="text-white/50 font-light max-w-xl mx-auto">
+                    Kelola data dosen dan jadwal mengajar
+                </p>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="glass-panel rounded-2xl overflow-hidden">
+                <div class="flex gap-2 p-4 border-b border-white/10">
+                    <button type="button" id="tabList" class="tab-btn px-6 py-3 text-sm font-medium rounded-lg border border-white/10 transition-all tab-active">
+                        <span class="iconify inline mr-2" data-icon="lucide:list"></span>
+                        Daftar Dosen
+                    </button>
+                    <button type="button" id="tabAdd" class="tab-btn px-6 py-3 text-sm font-medium rounded-lg border border-white/10 transition-all hover:border-white/20">
+                        <span class="iconify inline mr-2" data-icon="lucide:plus"></span>
+                        Tambah Dosen
+                    </button>
+                </div>
+                
+                <!-- Tab Content: List -->
+                <div id="contentList" class="p-8">
+                    <div id="adminDosenList" class="space-y-3">
+                        <!-- Loading state -->
+                        <div class="text-center py-10">
+                            <div class="w-12 h-12 border-2 border-brand-primary/30 border-t-brand-primary rounded-full animate-spin mx-auto mb-4"></div>
+                            <p class="text-white/50 text-sm">Memuat data...</p>
+                        </div>
+                    </div>
+                    <div id="adminEmptyState" class="hidden text-center py-20">
+                        <div class="w-20 h-20 rounded-2xl bg-brand-primary/10 flex items-center justify-center mx-auto mb-6">
+                            <span class="iconify text-brand-primary text-4xl" data-icon="lucide:users"></span>
+                        </div>
+                        <h3 class="text-xl font-medium mb-2">Belum Ada Data Dosen</h3>
+                        <p class="text-white/50">Klik tab "Tambah Dosen" untuk menambahkan data baru</p>
+                    </div>
+                </div>
+                
+                <!-- Tab Content: Add/Edit Form -->
+                <div id="contentAdd" class="hidden p-8 max-w-2xl">
+                    <form id="dosenForm" class="space-y-6">
+                        <input type="hidden" id="editId" value="">
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-medium text-white/70 mb-2">Gelar Depan</label>
+                                <input type="text" id="inputgelar_depan" placeholder="Contoh: Dr., Prof." class="w-full rounded-xl px-4 py-3 text-sm">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-white/70 mb-2">Nama Lengkap *</label>
+                                <input type="text" id="inputName" required placeholder="Nama Lengkap" class="w-full rounded-xl px-4 py-3 text-sm">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-white/70 mb-2">Gelar Belakang</label>
+                                <input type="text" id="inputgelar_belakang" placeholder="Contoh: M.S, S.E." class="w-full rounded-xl px-4 py-3 text-sm">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-white/70 mb-2">NIP *</label>
+                                <input type="text" id="inputNIP" required placeholder="NIP Dosen" class="w-full rounded-xl px-4 py-3 text-sm">
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-medium text-white/70 mb-2">Program Studi *</label>
+                                <select id="inputProdi" required class="w-full bg-brand-dark border border-white/10 rounded-xl px-4 py-3 text-sm cursor-pointer text-white">
+                                    <option value="" class="bg-brand-dark text-white">Pilih Program Studi</option>
+                                    <option value="akuntansi" class="bg-brand-dark text-white">Akuntansi</option>
+                                    <option value="manajemen" class="bg-brand-dark text-white">Manajemen</option>
+                                    <option value="ekonomi" class="bg-brand-dark text-white">Ekonomi Pembangunan</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-white/10 pt-6">
+                            <label class="block text-xs font-medium text-white/70 mb-4">File PDF Jadwal Mengajar</label>
+                            
+                            <!-- URL Input Option -->
+                            <div class="mb-4">
+                                <input type="url" id="inputPdfUrl" placeholder="https://example.com/jadwal.pdf" class="w-full rounded-xl px-4 py-3 text-sm">
+                                <p class="text-xs text-white/40 mt-1">Masukkan URL file PDF (Google Drive, Dropbox, dll)</p>
+                            </div>
+                            
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="flex-1 h-px bg-white/10"></div>
+                                <span class="text-xs text-white/40">ATAU</span>
+                                <div class="flex-1 h-px bg-white/10"></div>
+                            </div>
+                            
+                            <!-- File Upload Option -->
+                            <div>
+                                <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-brand-primary/30 transition-colors">
+                                    <span class="iconify text-3xl text-white/30 mb-2" data-icon="lucide:upload-cloud"></span>
+                                    <span class="text-sm text-white/50">Klik untuk upload file PDF</span>
+                                    <span class="text-xs text-white/30 mt-1">Maks. 10MB</span>
+                                    <input type="file" id="inputPdfFile" accept=".pdf" class="hidden">
+                                </label>
+                                <p id="uploadedFileName" class="text-xs text-brand-primary mt-2 hidden"></p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-4 pt-4">
+                            <button type="button" id="resetBtn" class="flex-1 py-3 text-sm font-medium glass-panel rounded-xl hover:border-white/20 transition-colors">
+                                Reset
+                            </button>
+                            <button type="submit" id="submitBtn" class="flex-1 py-3 text-sm font-semibold bg-brand-primary text-brand-dark rounded-xl hover:bg-brand-glow transition-colors">
+                                <span id="submitBtnText">Simpan Data</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="relative py-16 px-6 border-t border-white/5">
+        <div class="max-w-6xl mx-auto text-center">
+            <p class="text-xs text-white/30">nono©gesit solution 2026 .</p>
+        </div>
+    </footer>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="confirmModal" class="fixed inset-0 z-110 hidden">
+        <div class="modal-backdrop fixed inset-0" style="background: rgba(2, 2, 4, 0.95); backdrop-filter: blur(12px);"></div>
+        <div class="relative z-20 w-full h-full flex items-center justify-center p-4">
+            <div class="glass-panel rounded-2xl w-full max-w-md p-6">
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                        <span class="iconify text-red-500 text-3xl" data-icon="lucide:trash-2"></span>
+                    </div>
+                    <h3 class="text-lg font-medium mb-2">Hapus Data Dosen?</h3>
+                    <p class="text-sm text-white/50 mb-6">Data yang dihapus tidak dapat dikembalikan.</p>
+                    <div class="flex gap-4">
+                        <button type="button" id="cancelDeleteBtn" class="flex-1 py-3 text-sm font-medium glass-panel rounded-xl hover:border-white/20 transition-colors">
+                            Batal
+                        </button>
+                        <button type="button" id="confirmDeleteBtn" class="flex-1 py-3 text-sm font-semibold bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors">
+                            Hapus
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // =====================
+    // KONFIGURASI & INISIALISASI
+    // =====================
+    const SUPABASE_URL = 'https://mieglylikfjdablnbkdk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pZWdseWxpa2ZqZGFibG5ia2RrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTE3MDcsImV4cCI6MjA4NzQyNzcwN30.51jPXEeVXMaMjPMYcVQQRQ28iclgP3E5kHHqWE5uEOk';
+    
+    // Inisialisasi Supabase
+    let supabaseClient;
+    try {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase initialized successfully');
+    } catch (error) {
+        console.error('❌ Failed to initialize Supabase:', error);
+    }
+
+    // State variables
+    let dosenData = [];
+    let deleteTargetId = null;
+
+    // =====================
+    // DOM ELEMENTS (diambil setelah DOM siap)
+    // =====================
+    let elements = {};
+
+    function initializeElements() {
+        elements = {
+            tabList: document.getElementById('tabList'),
+            tabAdd: document.getElementById('tabAdd'),
+            contentList: document.getElementById('contentList'),
+            contentAdd: document.getElementById('contentAdd'),
+            adminDosenList: document.getElementById('adminDosenList'),
+            adminEmptyState: document.getElementById('adminEmptyState'),
+            dosenForm: document.getElementById('dosenForm'),
+            editId: document.getElementById('editId'),
+            submitBtn: document.getElementById('submitBtn'),
+            submitBtnText: document.getElementById('submitBtnText'),
+            resetBtn: document.getElementById('resetBtn'),
+            confirmModal: document.getElementById('confirmModal'),
+            cancelDeleteBtn: document.getElementById('cancelDeleteBtn'),
+            confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
+            uploadedFileName: document.getElementById('uploadedFileName'),
+            inputPdfFile: document.getElementById('inputPdfFile')
+        };
+        console.log('✅ DOM elements initialized');
+    }
+
+    // =====================
+    // TAB SWITCHING
+    // =====================
+    function switchTab(tab) {
+        console.log('🔄 Switching to tab:', tab);
+        
+        if (!elements.tabList || !elements.tabAdd || !elements.contentList || !elements.contentAdd) {
+            console.error('❌ Tab elements not found!');
+            return;
+        }
+
+        // Reset semua tab
+        elements.tabList.classList.remove('tab-active');
+        elements.tabAdd.classList.remove('tab-active');
+        elements.contentList.classList.add('hidden');
+        elements.contentAdd.classList.add('hidden');
+
+        // Aktifkan tab yang dipilih
+        if (tab === 'list') {
+            elements.tabList.classList.add('tab-active');
+            elements.contentList.classList.remove('hidden');
+        } else if (tab === 'add') {
+            elements.tabAdd.classList.add('tab-active');
+            elements.contentAdd.classList.remove('hidden');
+        }
+        
+        console.log('✅ Tab switched to:', tab);
+    }
+
+    // =====================
+    // LOAD DATA
+    // =====================
+    async function loadData() {
+        console.log('📥 Loading data...');
+        
+        if (!elements.adminDosenList) {
+            console.error('❌ adminDosenList element not found');
+            return;
+        }
+
+        // Show loading state
+        elements.adminDosenList.innerHTML = `
+            <div class="text-center py-10">
+                <div class="w-12 h-12 border-2 border-brand-primary/30 border-t-brand-primary rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-white/50 text-sm">Memuat data...</p>
+            </div>
+        `;
+
+        try {
+            const { data, error } = await supabaseClient
+                .from('dosen')
+                .select('*')
+                .order('nama_lengkap', { ascending: true });
+
+            if (error) throw error;
+            
+            dosenData = data || [];
+            console.log('✅ Data loaded:', dosenData.length, 'records');
+            renderAdminList();
+        } catch (error) {
+            console.error('❌ Error loading data:', error);
+            elements.adminDosenList.innerHTML = `
+                <div class="text-center py-10">
+                    <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                        <span class="iconify text-red-500 text-3xl" data-icon="lucide:alert-circle"></span>
+                    </div>
+                    <h3 class="text-lg font-medium mb-2 text-red-400">Gagal Memuat Data</h3>
+                    <p class="text-white/50 text-sm mb-4">${error.message}</p>
+                    <button onclick="loadData()" class="px-4 py-2 text-sm bg-brand-primary/20 text-brand-primary rounded-lg hover:bg-brand-primary/30 transition-colors">
+                        Coba Lagi
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    function renderAdminList() {
+        if (!elements.adminDosenList || !elements.adminEmptyState) return;
+        
+        if (dosenData.length === 0) {
+            elements.adminDosenList.innerHTML = '';
+            elements.adminEmptyState.classList.remove('hidden');
+            return;
+        }
+        
+        elements.adminEmptyState.classList.add('hidden');
+        elements.adminDosenList.innerHTML = dosenData.map(dosen => `
+            <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-brand-primary/10 flex items-center justify-center shrink-0">
+                        <span class="iconify text-brand-primary" data-icon="lucide:user"></span>
+                    </div>
+                    <div class="min-w-0">
+                        <h4 class="font-medium text-sm truncate">${dosen.gelar_depan || ''} ${dosen.nama_lengkap} ${dosen.gelar_belakang || ''}</h4>
+                        <p class="text-xs text-white/50">${dosen.nip || '-'}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button onclick="editDosen('${dosen.id}')" class="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Edit">
+                        <span class="iconify text-white/60" data-icon="lucide:edit-2"></span>
+                    </button>
+                    <button onclick="deleteDosen('${dosen.id}')" class="p-2 rounded-lg hover:bg-red-500/20 transition-colors" title="Hapus">
+                        <span class="iconify text-red-400" data-icon="lucide:trash-2"></span>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // =====================
+    // SAVE / UPDATE DATA
+    // =====================
+    async function saveDosen(event) {
+        event.preventDefault();
+        
+        if (!elements.submitBtnText) return;
+        
+        elements.submitBtnText.textContent = 'Menyimpan...';
+        elements.submitBtn.disabled = true;
+        
+        const editId = elements.editId.value;
+        const fileInput = elements.inputPdfFile;
+        const file = fileInput ? fileInput.files[0] : null;
+        const urlInput = document.getElementById('inputPdfUrl');
+        const urlValue = urlInput ? urlInput.value.trim() : '';
+
+        try {
+            let finalPdfUrl = urlValue;
+
+            // Proses Upload PDF ke Supabase Storage (opsional, hanya jika file dipilih)
+            if (file) {
+                try {
+                    console.log('📤 Uploading file:', file.name);
+                    const fileName = `${Date.now()}_${file.name}`;
+                    const { data, error: uploadError } = await supabaseClient.storage
+                        .from('jadwal-dosen')
+                        .upload(fileName, file);
+
+                    if (uploadError) {
+                        console.warn('⚠️ File upload skipped (bucket mungkin belum dibuat):', uploadError.message);
+                        // Lanjutkan meski upload gagal - gunakan URL jika ada
+                    } else {
+                        // Dapatkan Public URL
+                        const { data: publicUrlData } = supabaseClient.storage
+                            .from('jadwal-dosen')
+                            .getPublicUrl(fileName);
+                        
+                        finalPdfUrl = publicUrlData.publicUrl;
+                        console.log('✅ File uploaded:', finalPdfUrl);
+                    }
+                } catch (uploadError) {
+                    console.warn('⚠️ Upload error:', uploadError.message);
+                }
+            }
+
+            const dosenObj = {
+                gelar_depan: document.getElementById('inputgelar_depan').value.trim(),
+                nama_lengkap: document.getElementById('inputName').value.trim(),
+                gelar_belakang: document.getElementById('inputgelar_belakang').value.trim(),
+                nip: document.getElementById('inputNIP').value.trim(),
+                prodi: document.getElementById('inputProdi').value,
+                jadwal_pdf: finalPdfUrl || ''
+            };
+
+            console.log('💾 Saving data:', dosenObj);
+
+            if (editId) {
+                const { error } = await supabaseClient
+                    .from('dosen')
+                    .update(dosenObj)
+                    .eq('id', editId);
+                if (error) throw error;
+            } else {
+                const { error } = await supabaseClient
+                    .from('dosen')
+                    .insert([dosenObj]);
+                if (error) throw error;
+            }
+
+            alert('✅ Data berhasil disimpan!');
+            resetForm();
+            switchTab('list');
+            await loadData();
+        } catch (error) {
+            console.error('❌ Error saving:', error);
+            alert('❌ Gagal menyimpan data: ' + error.message);
+        } finally {
+            elements.submitBtnText.textContent = 'Simpan Data';
+            elements.submitBtn.disabled = false;
+        }
+    }
+
+    // =====================
+    // EDIT DOSEN
+    // =====================
+    function editDosen(id) {
+        console.log('✏️ Editing dosen:', id);
+        const dosen = dosenData.find(d => d.id === id);
+        if (!dosen) {
+            console.error('❌ Dosen not found');
+            return;
+        }
+        
+        elements.editId.value = dosen.id;
+        document.getElementById('inputgelar_depan').value = dosen.gelar_depan || '';
+        document.getElementById('inputName').value = dosen.nama_lengkap || '';
+        document.getElementById('inputgelar_belakang').value = dosen.gelar_belakang || '';
+        document.getElementById('inputNIP').value = dosen.nip || '';
+        document.getElementById('inputProdi').value = dosen.prodi || '';
+        
+        if (dosen.jadwal_pdf) {
+            document.getElementById('inputPdfUrl').value = dosen.jadwal_pdf;
+        }
+        
+        elements.submitBtnText.textContent = 'Perbarui Data';
+        switchTab('add');
+    }
+
+    // =====================
+    // DELETE DOSEN
+    // =====================
+    function deleteDosen(id) {
+        console.log('🗑️ Requesting delete for:', id);
+        deleteTargetId = id;
+        if (elements.confirmModal) {
+            elements.confirmModal.classList.remove('hidden');
+        }
+    }
+
+    async function confirmDelete() {
+        if (!deleteTargetId) return;
+        
+        console.log('🗑️ Confirming delete for:', deleteTargetId);
+        
+        try {
+            const { error } = await supabase
+                .from('dosen')
+                .delete()
+                .eq('id', deleteTargetId);
+            
+            if (error) throw error;
+            
+            alert('✅ Data berhasil dihapus!');
+            await loadData();
+        } catch (error) {
+            console.error('❌ Error deleting:', error);
+            alert('❌ Gagal menghapus data: ' + error.message);
+        }
+        
+        closeConfirmModal();
+    }
+
+    function closeConfirmModal() {
+        if (elements.confirmModal) {
+            elements.confirmModal.classList.add('hidden');
+        }
+        deleteTargetId = null;
+    }
+
+    // =====================
+    // RESET FORM
+    // =====================
+    function resetForm() {
+        if (elements.dosenForm) {
+            elements.dosenForm.reset();
+        }
+        if (elements.editId) {
+            elements.editId.value = '';
+        }
+        if (elements.submitBtnText) {
+            elements.submitBtnText.textContent = 'Simpan Data';
+        }
+        if (elements.uploadedFileName) {
+            elements.uploadedFileName.classList.add('hidden');
+        }
+    }
+
+    // =====================
+    // FILE UPLOAD HANDLER
+    // =====================
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (file && elements.uploadedFileName) {
+            elements.uploadedFileName.textContent = `File disiapkan: ${file.name}`;
+            elements.uploadedFileName.classList.remove('hidden');
+        }
+    }
+
+    // =====================
+    // EVENT LISTENERS (Setup setelah DOM siap)
+    // =====================
+    function setupEventListeners() {
+        console.log('🎯 Setting up event listeners...');
+        
+        // Tab buttons - Query langsung dari DOM untuk memastikan element ditemukan
+        const tabListBtn = document.getElementById('tabList');
+        const tabAddBtn = document.getElementById('tabAdd');
+        
+        if (tabListBtn) {
+            tabListBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                switchTab('list');
+            });
+            console.log('✅ Tab List listener attached');
+        }
+        if (tabAddBtn) {
+            tabAddBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                switchTab('add');
+            });
+            console.log('✅ Tab Add listener attached');
+        }
+
+        // Form submit
+        if (elements.dosenForm) {
+            elements.dosenForm.addEventListener('submit', saveDosen);
+        }
+
+        // Reset button
+        if (elements.resetBtn) {
+            elements.resetBtn.addEventListener('click', resetForm);
+        }
+
+        // Modal buttons
+        if (elements.cancelDeleteBtn) {
+            elements.cancelDeleteBtn.addEventListener('click', closeConfirmModal);
+        }
+        if (elements.confirmDeleteBtn) {
+            elements.confirmDeleteBtn.addEventListener('click', confirmDelete);
+        }
+
+        // File input
+        if (elements.inputPdfFile) {
+            elements.inputPdfFile.addEventListener('change', handleFileUpload);
+        }
+
+        // Close modal on backdrop click
+        const modalBackdrop = document.querySelector('.modal-backdrop');
+        if (modalBackdrop) {
+            modalBackdrop.addEventListener('click', closeConfirmModal);
+        }
+
+        console.log('✅ Event listeners setup complete');
+    }
+
+    // =====================
+    // INITIALIZATION
+    // =====================
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 DOM Content Loaded - Initializing...');
+        
+        // Initialize DOM elements first
+        initializeElements();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        // Load initial data
+        loadData();
+        
+        console.log('✅ Application initialized');
+    });
+    </script>
+</body>
+</html>

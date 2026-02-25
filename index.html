@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Jadwal Mengajar Dosen</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Iconify -->
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: '#38bdf8',
+                            glow: '#0ea5e9',
+                            dark: '#020204',
+                            panel: '#0A0B10',
+                            border: 'rgba(255,255,255,0.08)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Instrument Serif', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #020204;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .font-serif { font-family: 'Instrument Serif', serif; }
+        
+        .glass-panel {
+            background: linear-gradient(180deg, rgba(56,189,248,0.03) 0%, rgba(255,255,255,0.01) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(to bottom right, #ffffff, #38bdf8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
+        
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            filter: blur(4px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+        
+        .modal-backdrop {
+            background: rgba(2, 2, 4, 0.95);
+            backdrop-filter: blur(12px);
+        }
+        
+        .doc-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(56,189,248,0.3);
+            box-shadow: 0 20px 40px rgba(56,189,248,0.1);
+        }
+        
+        .doc-card { transition: all 0.3s ease; }
+        
+        input, select, textarea {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: rgba(56,189,248,0.5);
+        }
+        
+        .tab-active {
+            background: rgba(56,189,248,0.2);
+            color: #38bdf8;
+            border-color: rgba(56,189,248,0.3);
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .animate-float { animation: float 8s ease-in-out infinite; }
+    </style>
+</head>
+<body class="text-white antialiased overflow-x-hidden">
+    <!-- Background Glow -->
+    <div class="fixed inset-0 pointer-events-none" style="background: radial-gradient(circle at 50% 0%, #0ea5e9 0%, transparent 50%); opacity: 0.15;"></div>
+    <div class="fixed inset-0 bg-grid pointer-events-none opacity-50"></div>
+    
+    <!-- Canvas Particles -->
+    <canvas id="particles" class="fixed inset-0 pointer-events-none"></canvas>
+    
+   <nav class="fixed top-4 md:top-6 left-1/2 -translate-x-1/2 w-[95%] md:w-[92%] max-w-5xl z-50">
+        <div class="glass-panel rounded-full px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-brand-primary/20 flex items-center justify-center">
+                    <span class="iconify text-brand-primary text-lg" data-icon="lucide:calendar-days"></span>
+                </div>
+                <span class="font-semibold text-sm">Jadwal Dosen</span>
+            </div>
+            <div class="hidden items-center gap-4">
+                <a href="admin.html" class="px-4 py-2 text-xs font-semibold glass-panel rounded-full hover:border-brand-primary/30 transition-all duration-300 flex items-center gap-2">
+                    <span class="iconify" data-icon="lucide:settings"></span>
+                    <span class="hidden sm:inline">Admin Panel</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section id="beranda" class="relative pt-32 md:pt-40 pb-20 px-6">
+        <div class="max-w-6xl mx-auto text-center">
+            <div class="reveal">
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel text-xs font-medium text-brand-primary mb-6">
+                    <span class="w-2 h-2 rounded-full bg-brand-primary animate-pulse"></span>
+                    <span id="semesterLabel">Semester Genap 2025/2026</span>
+                </span>
+            </div>
+            
+            <h1 class="reveal font-serif text-4xl sm:text-5xl md:text-7xl tracking-tight leading-tight mb-6" style="transition-delay: 100ms;">
+                Portal Informasi<br>
+                <span class="text-gradient">Jadwal Mengajar Dosen</span>
+                <br>
+                <span class="text-gradient">Jurusan Ekonomi dan Studi Pembangunan</span>
+            </h1>
+            
+            <p class="reveal text-white/50 text-base md:text-lg font-light max-w-2xl mx-auto mb-10 leading-relaxed" style="transition-delay: 200ms;">
+                Akses jadwal perkuliahan dosen dengan mudah. Klik nama dosen untuk melihat jadwal mengajar.
+            </p>
+            
+            <div class="reveal flex flex-col sm:flex-row gap-4 justify-center" style="transition-delay: 300ms;">
+                <a href="#dosen" class="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-brand-dark text-sm font-semibold rounded-full hover:bg-brand-primary transition-all duration-300">
+                    Lihat Jadwal Dosen
+                    <span class="iconify group-hover:translate-x-0.5 transition-transform" data-icon="lucide:arrow-down"></span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="max-w-4xl mx-auto mt-20 grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="reveal glass-panel rounded-2xl p-6 text-center" style="transition-delay: 400ms;">
+                <div class="font-serif text-3xl md:text-4xl text-gradient mb-2" id="statDosen">0</div>
+                <div class="text-xs text-white/50 uppercase tracking-wide">Dosen Aktif</div>
+            </div>
+            <div class="reveal glass-panel rounded-2xl p-6 text-center" style="transition-delay: 500ms;">
+                <div class="font-serif text-3xl md:text-4xl text-gradient mb-2">48</div>
+                <div class="text-xs text-white/50 uppercase tracking-wide">Mata Kuliah</div>
+            </div>
+            <div class="reveal glass-panel rounded-2xl p-6 text-center" style="transition-delay: 600ms;">
+                <div class="font-serif text-3xl md:text-4xl text-gradient mb-2">6</div>
+                <div class="text-xs text-white/50 uppercase tracking-wide">Program Studi</div>
+            </div>
+            <div class="reveal glass-panel rounded-2xl p-6 text-center" style="transition-delay: 700ms;">
+                <div class="font-serif text-3xl md:text-4xl text-gradient mb-2">1200+</div>
+                <div class="text-xs text-white/50 uppercase tracking-wide">Mahasiswa</div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Dosen List Section -->
+    <section id="dosen" class="relative py-20 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <span class="reveal inline-block text-[10px] md:text-[11px] font-medium uppercase tracking-widest text-brand-primary mb-4">
+                    Fakultas Ekonomi & Bisnis
+                </span>
+                <h2 class="reveal font-serif text-3xl md:text-5xl tracking-tight mb-4" style="transition-delay: 100ms;">
+                    Daftar Dosen Pengajar
+                </h2>
+                <p class="reveal text-white/50 font-light max-w-xl mx-auto" style="transition-delay: 200ms;">
+                    Klik nama dosen untuk melihat jadwal mengajar lengkap
+                </p>
+            </div>
+            
+            <!-- Search & Filter -->
+            <div class="reveal glass-panel rounded-2xl p-4 mb-10" style="transition-delay: 300ms;">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1 relative">
+                        <span class="iconify absolute left-4 top-1/2 -translate-y-1/2 text-white/40" data-icon="lucide:search"></span>
+                        <input type="text" id="searchInput" placeholder="Cari nama dosen..." class="w-full rounded-xl pl-12 pr-4 py-3 text-sm">
+                    </div>
+                    <select id="prodiFilter" class="bg-brand-dark border border-white/10 rounded-xl px-4 py-3 text-sm cursor-pointer text-white">
+                        <option value="all" class="bg-brand-dark text-white">Semua Program Studi</option>
+                        <option value="akuntansi" class="bg-brand-dark text-white">Akuntansi</option>
+                        <option value="manajemen" class="bg-brand-dark text-white">Manajemen</option>
+                        <option value="ekonomi" class="bg-brand-dark text-white">Ekonomi Pembangunan</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Dosen Grid -->
+            <div id="dosenGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dosen cards will be inserted here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-20">
+                <div class="w-20 h-20 rounded-2xl bg-brand-primary/10 flex items-center justify-center mx-auto mb-6">
+                    <span class="iconify text-brand-primary text-4xl" data-icon="lucide:users"></span>
+                </div>
+                <h3 class="text-xl font-medium mb-2">Belum Ada Data Dosen</h3>
+                <p class="text-white/50 mb-6">Silakan tambahkan data dosen melalui Admin Panel</p>
+                <a href="admin.html" class="px-6 py-3 bg-brand-primary text-brand-dark text-sm font-semibold rounded-full inline-block">
+                    Buka Admin Panel
+                </a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="relative py-16 px-6 border-t border-white/5">
+        <div class="max-w-6xl mx-auto text-center">
+            <p class="text-xs text-white/30">nono©gesit-solution 2026 .</p>
+        </div>
+    </footer>
+    
+    <!-- PDF Viewer Modal -->
+    <div id="pdfModal" class="fixed inset-0 z-100 hidden">
+        <div class="modal-backdrop absolute inset-0" onclick="closePdfModal()"></div>
+        <div class="relative z-10 w-full h-full flex items-center justify-center p-4">
+            <div class="glass-panel rounded-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden">
+                <div class="flex items-center justify-between p-4 border-b border-white/10">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-brand-primary/20 flex items-center justify-center">
+                            <span class="iconify text-brand-primary text-xl" data-icon="lucide:file-text"></span>
+                        </div>
+                        <div>
+                            <h3 id="modalTitle" class="font-medium">Jadwal Mengajar</h3>
+                            <p id="modalSubtitle" class="text-xs text-white/50">Semester Genap 2025/2026</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a id="downloadBtn" href="#" download class="px-4 py-2 text-xs font-medium bg-brand-primary/20 text-brand-primary rounded-lg hover:bg-brand-primary/30 transition-colors flex items-center gap-2">
+                            <span class="iconify" data-icon="lucide:download"></span>
+                            Unduh PDF
+                        </a>
+                        <button onclick="closePdfModal()" class="w-10 h-10 rounded-lg hover:bg-white/10 flex items-center justify-center transition-colors">
+                            <span class="iconify text-xl" data-icon="lucide:x"></span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-1 bg-white/5 overflow-auto rounded-b-2xl relative">
+                    <iframe id="pdfViewer" class="w-full h-full" frameborder="0"></iframe>
+                    <div id="noPdfMessage" class="hidden absolute inset-0">
+                        <div class="flex items-center justify-center w-full h-full">
+                            <div class="text-center">
+                                <span class="iconify text-5xl text-white/30 mb-2 block" data-icon="lucide:file-x"></span>
+                                <p class="text-white/50">PDF tidak tersedia</p>
+                                <p class="text-xs text-white/30 mt-1">Silakan hubungi admin untuk menambahkan link PDF</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        
+    const SUPABASE_URL = 'https://mieglylikfjdablnbkdk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pZWdseWxpa2ZqZGFibG5ia2RrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NTE3MDcsImV4cCI6MjA4NzQyNzcwN30.51jPXEeVXMaMjPMYcVQQRQ28iclgP3E5kHHqWE5uEOk';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let dosenData = [];
+
+async function loadData() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('dosen')
+            .select('*')
+            .order('nama_lengkap', { ascending: true });
+
+        if (error) throw error;
+        dosenData = data || [];
+        
+        renderDosenCards();
+        updateStats();
+    } catch (error) {
+        console.error('Error loading data:', error);
+        alert('Gagal memuat data dari database.');
+    }
+}   
+               
+        function renderDosenCards() {
+            const grid = document.getElementById('dosenGrid');
+            const emptyState = document.getElementById('emptyState');
+            const searchInput = document.getElementById('searchInput');
+            const prodiFilter = document.getElementById('prodiFilter');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            const prodi = prodiFilter ? prodiFilter.value : 'all';
+            
+            let filtered = dosenData.filter(dosen => {
+                const matchSearch = dosen.nama_lengkap.toLowerCase().includes(search);
+                const matchProdi = prodi === 'all' || dosen.prodi === prodi;
+                return matchSearch && matchProdi;
+            });
+            
+            if (filtered.length === 0 && dosenData.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="md:col-span-3 text-center py-10">
+                        <p class="text-white/50">Tidak ada dosen yang cocok dengan pencarian</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = filtered.map((dosen, index) => `
+                <div class="reveal active doc-card glass-panel rounded-2xl p-6 cursor-pointer" onclick="openPdfModal('${dosen.id}')">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-primary/20 to-brand-glow/10 flex items-center justify-center">
+                            <span class="iconify text-brand-primary text-xl" data-icon="lucide:user"></span>
+                        </div>
+                        <span class="px-3 py-1 text-[10px] font-medium uppercase tracking-wider rounded-full ${getProdiColor(dosen.prodi)}">
+                            ${getProdiName(dosen.prodi)}
+                        </span>
+                    </div>
+
+                    <h3 class="font-medium text-base mb-2 leading-snug">${dosen.gelar_depan || ''} ${dosen.nama_lengkap} ${dosen.gelar_belakang || ''}</h3>
+                    <div class="text-xs text-white/50 mb-4 flex items-center gap-1">
+                        <span class="iconify" data-icon="lucide:id-card"></span>
+                        ${dosen.nip || '-'}
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-white/5">
+                        <span class="text-xs text-white/40">
+                            ${getProdiName(dosen.prodi)}
+                        </span>
+                        <span class="text-brand-primary text-xs font-medium flex items-center gap-1">
+                            Lihat Jadwal
+                            <span class="iconify" data-icon="lucide:arrow-right"></span>
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateStats() {
+            const statEl = document.getElementById('statDosen');
+            if (statEl) statEl.textContent = dosenData.length;
+        }
+        
+        function getProdiColor(prodi) {
+            const colors = {
+                'akuntansi': 'bg-blue-500/20 text-blue-400',
+                'manajemen': 'bg-green-500/20 text-green-400',
+                'ekonomi': 'bg-purple-500/20 text-purple-400'
+            };
+            return colors[prodi] || 'bg-white/10 text-white/60';
+        }
+        
+        function getProdiName(prodi) {
+            const names = { 'akuntansi': 'Akuntansi', 'manajemen': 'Manajemen', 'ekonomi': 'Ekonomi' };
+            return names[prodi] || prodi;
+        }
+        
+        // =====================
+        // MODAL FUNCTIONS
+        // =====================
+        
+        function openPdfModal(id) {
+            const dosen = dosenData.find(d => d.id === id);
+            if (!dosen) return;
+
+            const pdfUrl = dosen.jadwal_pdf || '';
+            const noPdfMsg = document.getElementById('noPdfMessage');
+            const pdfViewer = document.getElementById('pdfViewer');
+            
+            document.getElementById('modalTitle').textContent = `Jadwal ${dosen.gelar_depan || ''} ${dosen.nama_lengkap} ${dosen.gelar_belakang || ''}`;
+            document.getElementById('modalSubtitle').textContent = `${dosen.nip} | ${getProdiName(dosen.prodi)}`;
+            
+            // Tampilkan PDF langsung di iframe agar browser menampilkan viewer native
+            if (pdfUrl) {
+                // Konversi link Google Drive / Dropbox menjadi direct link jika perlu
+                let src = pdfUrl;
+
+                // Google Drive share links: /file/d/FILEID/view or open?id=FILEID or uc?id=FILEID
+                const gdriveFileMatch = pdfUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+                const gdriveOpenMatch = pdfUrl.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+                const gdriveUcMatch = pdfUrl.match(/drive\.google\.com\/uc\?id=([a-zA-Z0-9_-]+)/);
+                const gdriveAny = gdriveFileMatch || gdriveOpenMatch || gdriveUcMatch;
+                if (gdriveAny) {
+                    const fileId = gdriveAny[1];
+                    src = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                } else if (pdfUrl.includes('dropbox.com')) {
+                    // Dropbox share links need ?raw=1 or dl=1 to serve raw file
+                    if (!/([?&](raw|dl)=1)/.test(pdfUrl)) {
+                        src = pdfUrl.includes('?') ? `${pdfUrl}&raw=1` : `${pdfUrl}?raw=1`;
+                    }
+                }
+
+                // Set iframe src (data: URIs and direct http(s) links supported)
+                pdfViewer.src = src;
+                pdfViewer.style.display = 'block';
+                noPdfMsg.classList.add('hidden');
+                document.getElementById('downloadBtn').href = pdfUrl;
+                document.getElementById('downloadBtn').style.display = 'flex';
+            } else {
+                pdfViewer.src = '';
+                pdfViewer.style.display = 'none';
+                noPdfMsg.classList.remove('hidden');
+                document.getElementById('downloadBtn').style.display = 'none';
+            }
+            
+            document.getElementById('pdfModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closePdfModal() {
+            document.getElementById('pdfModal').classList.add('hidden');
+            document.getElementById('pdfViewer').src = '';
+            document.getElementById('pdfViewer').style.display = 'block';
+            document.getElementById('noPdfMessage').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+        
+        function setupSearchFilter() {
+            const searchInput = document.getElementById('searchInput');
+            const prodiFilter = document.getElementById('prodiFilter');
+            if (searchInput) searchInput.addEventListener('input', renderDosenCards);
+            if (prodiFilter) prodiFilter.addEventListener('change', renderDosenCards);
+        }
+        
+            function initParticles() {
+                const canvas = document.getElementById('particles');
+                const ctx = canvas.getContext('2d');
+            
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            const particles = [];
+            for (let i = 0; i < 60; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    radius: Math.random() * 2,
+                    opacity: Math.random() * 0.5 + 0.1
+                });
+            }
+            
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach((p, i) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    
+                    if (p.x < 0) p.x = canvas.width;
+                    if (p.x > canvas.width) p.x = 0;
+                    if (p.y < 0) p.y = canvas.height;
+                    if (p.y > canvas.height) p.y = 0;
+                    
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(56,189,248,${p.opacity})`;
+                    ctx.fill();
+                    
+                    particles.slice(i + 1).forEach(p2 => {
+                        const dist = Math.sqrt((p.x - p2.x) ** 2 + (p.y - p2.y) ** 2);
+                        if (dist < 150) {
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.strokeStyle = `rgba(56,189,248,${0.1 * (1 - dist / 150)})`;
+                            ctx.stroke();
+                        }
+                    });
+                });
+                
+                requestAnimationFrame(animateParticles);
+            }
+            animateParticles();
+        }
+        
+        // =====================
+        // SCROLL REVEAL
+        // =====================
+        
+        function reveal() {
+            document.querySelectorAll('.reveal').forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 50) {
+                    el.classList.add('active');
+                }
+            });
+        }
+        window.addEventListener('scroll', reveal);
+        window.addEventListener('load', reveal);
+        
+        // =====================
+        // KEYBOARD SHORTCUTS
+        // =====================
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePdfModal();
+            }
+        });
+        
+        // =====================
+        // INITIALIZATION
+        // =====================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initParticles();
+            setupSearchFilter();
+            loadData();
+            reveal();
+        });
+    </script>
+</body>
+</html>
