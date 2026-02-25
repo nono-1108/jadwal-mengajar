@@ -114,6 +114,10 @@
                 <span class="font-semibold text-sm">Admin Panel</span>
             </div>
             <div class="flex items-center gap-4">
+                <button id="logoutBtn" class="px-4 py-2 text-xs font-semibold glass-panel rounded-full hover:border-red-500/30 hover:bg-red-500/10 transition-all duration-300 flex items-center gap-2 text-red-400">
+                    <span class="iconify" data-icon="lucide:log-out"></span>
+                    <span class="hidden sm:inline">Logout</span>
+                </button>
                 <a href="index.html" class="px-4 py-2 text-xs font-semibold glass-panel rounded-full hover:border-brand-primary/30 transition-all duration-300 flex items-center gap-2">
                     <span class="iconify" data-icon="lucide:arrow-left"></span>
                     <span class="hidden sm:inline">Kembali</span>
@@ -275,6 +279,32 @@
     </div>
 
     <script>
+    // =====================
+    // LOGIN SECURITY CHECK
+    // =====================
+    function checkAdminLogin() {
+        const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
+        if (!isLoggedIn) {
+            console.warn('⚠️ Not logged in, redirecting to login...');
+            window.location.href = 'admin-login.html';
+        }
+    }
+
+    // Check login sebelum DOM siap
+    checkAdminLogin();
+
+    // =====================
+    // LOGOUT HANDLER
+    // =====================
+    function handleLogout() {
+        if (confirm('Anda yakin ingin logout?')) {
+            sessionStorage.removeItem('adminLoggedIn');
+            sessionStorage.removeItem('adminUsername');
+            console.log('✅ Logout berhasil');
+            window.location.href = 'admin-login.html';
+        }
+    }
+
     // =====================
     // KONFIGURASI & INISIALISASI
     // =====================
@@ -615,6 +645,13 @@
     function setupEventListeners() {
         console.log('🎯 Setting up event listeners...');
         
+        // Logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', handleLogout);
+            console.log('✅ Logout button listener attached');
+        }
+
         // Tab buttons - Query langsung dari DOM untuk memastikan element ditemukan
         const tabListBtn = document.getElementById('tabList');
         const tabAddBtn = document.getElementById('tabAdd');

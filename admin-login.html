@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Jadwal Dosen</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Iconify -->
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: '#38bdf8',
+                            glow: '#0ea5e9',
+                            dark: '#020204',
+                            panel: '#0A0B10',
+                            border: 'rgba(255,255,255,0.08)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Instrument Serif', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #020204;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .font-serif { font-family: 'Instrument Serif', serif; }
+        
+        .glass-panel {
+            background: linear-gradient(180deg, rgba(56,189,248,0.03) 0%, rgba(255,255,255,0.01) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(to bottom right, #ffffff, #38bdf8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
+        
+        input, select, textarea {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: rgba(56,189,248,0.5);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-login:hover {
+            box-shadow: 0 0 30px rgba(56,189,248,0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .link-hover {
+            position: relative;
+            color: #38bdf8;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .link-hover:hover {
+            color: #0ea5e9;
+        }
+
+        .error-message {
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .error-message.show {
+            display: flex;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="text-white antialiased overflow-x-hidden">
+    <!-- Background Glow -->
+    <div class="fixed inset-0 pointer-events-none" style="background: radial-gradient(circle at 50% 0%, #0ea5e9 0%, transparent 50%); opacity: 0.15;"></div>
+    <div class="fixed inset-0 bg-grid pointer-events-none opacity-50"></div>
+    
+    <!-- Decorative background elements -->
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(34,211,238,0.2),transparent)] pointer-events-none" />
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_50%_50%_at_90%_40%,rgba(59,130,246,0.15),transparent)] pointer-events-none" />
+    
+    <div class="absolute top-20 left-10 w-72 h-72 md:w-96 md:h-96 bg-cyan-500/5 rounded-full blur-3xl animate-pulse" />
+    <div class="absolute bottom-20 right-10 w-96 h-96 md:w-[500px] md:h-[500px] bg-blue-500/5 rounded-full blur-3xl animate-pulse delay-1000" />
+    
+    <!-- Main Container -->
+    <main class="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 relative z-10">
+        <div class="w-full max-w-md">
+            <!-- Header -->
+            <div class="text-center mb-12 space-y-2">
+                <h1 class="font-serif text-5xl md:text-6xl font-black text-gradient mb-4 tracking-tight">
+                    Jadwal Dosen
+                </h1>
+                <div class="space-y-1">
+                    <p class="text-2xl md:text-3xl font-semibold text-white/90">
+                        Portal Informasi Dosen
+                    </p>
+                    <p class="text-lg md:text-xl text-brand-primary font-medium">
+                        Jurusan Ekonomi dan Studi Pembangunan
+                    </p>
+                    <p class="text-base md:text-lg text-slate-400">
+                        Semester 2024/2025
+                    </p>
+                </div>
+            </div>
+
+            <!-- Login Card -->
+            <div class="glass-panel rounded-3xl p-8 md:p-10 shadow-2xl shadow-black/40">
+                <!-- Error Message -->
+                <div id="errorMessage" class="error-message items-center gap-3 mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+                    <span class="iconify text-red-400 text-xl" data-icon="lucide:alert-circle"></span>
+                    <span id="errorText" class="text-sm text-red-400">Username atau password salah</span>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-6">
+                    <!-- Username/NIM Input -->
+                    <div>
+                        <label for="username" class="block text-sm font-semibold text-slate-200 mb-3">
+                            Username / NIM Admin
+                        </label>
+                        <div class="relative">
+                            <span class="iconify absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" data-icon="lucide:user"></span>
+                            <input
+                                id="username"
+                                type="text"
+                                placeholder="Masukkan username atau NIM"
+                                class="w-full px-5 py-4 pl-12 bg-white/10 border border-white/30 rounded-2xl text-white placeholder-slate-400 text-lg font-medium focus:ring-4 focus:ring-brand-primary/30 focus:border-brand-primary/50 transition-all duration-300 hover:bg-white/15"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Password Input -->
+                    <div>
+                        <label for="password" class="block text-sm font-semibold text-slate-200 mb-3">
+                            Kata Sandi
+                        </label>
+                        <div class="relative">
+                            <span class="iconify absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" data-icon="lucide:lock"></span>
+                            <input
+                                id="password"
+                                type="password"
+                                placeholder="Masukkan kata sandi"
+                                class="w-full px-5 py-4 pl-12 bg-white/10 border border-white/30 rounded-2xl text-white placeholder-slate-400 text-lg font-medium focus:ring-4 focus:ring-brand-primary/30 focus:border-brand-primary/50 transition-all duration-300 hover:bg-white/15"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Remember Me Checkbox -->
+                    <div class="flex items-center justify-between pt-2">
+                        <label class="flex items-center cursor-pointer">
+                            <input
+                                id="remember"
+                                type="checkbox"
+                                class="w-5 h-5 text-brand-primary bg-white/20 border-2 border-white/30 rounded focus:ring-brand-primary focus:ring-2 transition-all duration-200 hover:border-brand-primary"
+                            />
+                            <span class="ml-3 text-sm text-slate-300 font-medium">Ingat Saya</span>
+                        </label>
+                        <a href="#" class="text-sm font-medium text-brand-primary hover:text-brand-glow transition-colors duration-200">
+                            Lupa Kata Sandi?
+                        </a>
+                    </div>
+
+                    <!-- Login Button -->
+                    <button
+                        type="submit"
+                        class="w-full btn-login text-white font-bold py-5 px-8 rounded-2xl shadow-xl shadow-brand-primary/30 focus:outline-none focus:ring-4 focus:ring-brand-primary/50 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                        <span class="text-xl flex items-center justify-center gap-2">
+                            <span>Masuk ke Portal</span>
+                            <span class="iconify" data-icon="lucide:arrow-right"></span>
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Back to Home Link -->
+                <div class="text-center mt-8 pt-6 border-t border-white/10">
+                    <p class="text-sm text-slate-400">
+                        Kembali ke <a href="index.html" class="link-hover">halaman utama</a>
+                    </p>
+                </div>
+
+                <!-- Footer Info -->
+                <p class="text-xs text-slate-500 text-center mt-8 px-2 leading-relaxed">
+                    Login menggunakan akun admin Anda untuk mengakses dashboard manajemen jadwal dosen. <br />
+                    <span class="text-brand-primary font-medium">Akses terbatas untuk admin.</span>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    // =====================
+    // ADMIN CREDENTIALS
+    // =====================
+    const ADMIN_CREDENTIALS = {
+        username: 'admin',
+        password: 'admin123',
+        // bisa tambah lebih banyak akun:
+        // username2: 'password2'
+    };
+
+    // =====================
+    // LOGIN HANDLER
+    // =====================
+    const loginForm = document.getElementById('loginForm');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const rememberCheckbox = document.getElementById('remember');
+
+    // Load saved username if "Ingat Saya" was checked
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedUsername = localStorage.getItem('adminUsername');
+        if (savedUsername) {
+            usernameInput.value = savedUsername;
+            rememberCheckbox.checked = true;
+        }
+    });
+
+    // Handle form submission
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        hideError();
+
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+
+        // Validasi input kosong
+        if (!username || !password) {
+            showError('Silakan isi username dan password');
+            return;
+        }
+
+        // Validasi kredensial
+        if (ADMIN_CREDENTIALS.username === username && ADMIN_CREDENTIALS.password === password) {
+            // Login berhasil
+            console.log('✅ Login berhasil untuk:', username);
+
+            // Simpan username jika "Ingat Saya" dicentang
+            if (rememberCheckbox.checked) {
+                localStorage.setItem('adminUsername', username);
+            } else {
+                localStorage.removeItem('adminUsername');
+            }
+
+            // Simpan session
+            sessionStorage.setItem('adminLoggedIn', 'true');
+            sessionStorage.setItem('adminUsername', username);
+
+            // Redirect ke admin dashboard
+            window.location.href = 'admin.html';
+        } else {
+            // Login gagal
+            console.warn('❌ Login gagal untuk:', username);
+            showError('Username atau password salah');
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+    });
+
+    // Show error message
+    function showError(message) {
+        errorText.textContent = message;
+        errorMessage.classList.add('show');
+    }
+
+    // Hide error message
+    function hideError() {
+        errorMessage.classList.remove('show');
+    }
+
+    // Hide error saat user mengetik
+    usernameInput.addEventListener('input', hideError);
+    passwordInput.addEventListener('input', hideError);
+    </script>
+</body>
+</html>
