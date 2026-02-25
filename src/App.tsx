@@ -38,7 +38,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-slate-900 to-slate-950 flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-black via-slate-900 to-slate-950 flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(34,211,238,0.2),transparent)] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_50%_at_90%_40%,rgba(59,130,246,0.15),transparent)] pointer-events-none" />
@@ -49,7 +49,7 @@ export function App() {
       <div className="w-full max-w-md mx-auto relative z-10">
         {/* Header */}
         <div className="text-center mb-12 space-y-2">
-          <h1 className="text-5xl md:text-7xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-2xl mb-4 tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-black bg-linear-to-r from-cyan-400 via-blue-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-2xl mb-4 tracking-tight">
             Jadwal Dosen
           </h1>
           <div className="space-y-1">
@@ -120,7 +120,7 @@ export function App() {
 
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-cyan-500 via-cyan-400 to-blue-600 hover:from-cyan-400 hover:via-cyan-300 hover:to-blue-500 text-white font-bold py-5 px-8 rounded-2xl shadow-xl shadow-cyan-500/30 hover:shadow-2xl hover:shadow-cyan-400/50 focus:outline-none focus:ring-4 focus:ring-cyan-400/50 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full bg-linear-to-r from-cyan-500 via-cyan-400 to-blue-600 hover:from-cyan-400 hover:via-cyan-300 hover:to-blue-500 text-white font-bold py-5 px-8 rounded-2xl shadow-xl shadow-cyan-500/30 hover:shadow-2xl hover:shadow-cyan-400/50 focus:outline-none focus:ring-4 focus:ring-cyan-400/50 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <span className="text-xl">Masuk ke Portal</span>
                 </button>
@@ -208,7 +208,7 @@ export function App() {
 
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-600 hover:from-emerald-400 hover:via-emerald-300 hover:to-teal-500 text-white font-bold py-5 px-8 rounded-2xl shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-400/50 focus:outline-none focus:ring-4 focus:ring-emerald-400/50 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full bg-linear-to-r from-emerald-500 via-emerald-400 to-teal-600 hover:from-emerald-400 hover:via-emerald-300 hover:to-teal-500 text-white font-bold py-5 px-8 rounded-2xl shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-400/50 focus:outline-none focus:ring-4 focus:ring-emerald-400/50 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <span className="text-xl">Daftar Akun Baru</span>
                 </button>
