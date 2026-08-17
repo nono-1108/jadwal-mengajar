@@ -173,25 +173,7 @@
             </div>
         </div>
         
-        <!-- Stats -->
-        <div class="max-w-4xl mx-auto mt-20 grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div class="reveal glass-panel rounded-2xl p-6 text-center" style="transition-delay: 400ms;">
-                <div class="font-serif text-3xl md:text-4xl text-gradient mb-2" id="statDosen">0</div>
-                <div class="text-xs text-white/50 uppercase tracking-wide">Dosen Aktif</div>
-            </div>
-            <div class="reveal glass-panel rounded-2xl p-6 text-center" style="transition-delay: 500ms;">
-                <div class="font-serif text-3xl md:text-4xl text-gradient mb-2">48</div>
-                <div class="text-xs text-white/50 uppercase tracking-wide">Mata Kuliah</div>
-            </div>
-            <div class="reveal glass-panel rounded-2xl p-6 text-center" style="transition-delay: 600ms;">
-                <div class="font-serif text-3xl md:text-4xl text-gradient mb-2">6</div>
-                <div class="text-xs text-white/50 uppercase tracking-wide">Program Studi</div>
-            </div>
-            <div class="reveal glass-panel rounded-2xl p-6 text-center" style="transition-delay: 700ms;">
-                <div class="font-serif text-3xl md:text-4xl text-gradient mb-2">1200+</div>
-                <div class="text-xs text-white/50 uppercase tracking-wide">Mahasiswa</div>
-            </div>
-        </div>
+
     </section>
     
     <!-- Dosen List Section -->
@@ -300,23 +282,22 @@
 
     let dosenData = [];
 
-async function loadData() {
-    try {
-        const { data, error } = await supabaseClient
-            .from('dosen')
-            .select('*')
-            .order('nama_lengkap', { ascending: true });
-
-        if (error) throw error;
-        dosenData = data || [];
-        
-        renderDosenCards();
-        updateStats();
-    } catch (error) {
-        console.error('Error loading data:', error);
-        alert('Gagal memuat data dari database.');
-    }
-}   
+    async function loadData() {
+        try {
+            const { data, error } = await supabaseClient
+                .from('dosen')
+                .select('*')
+                .order('nama_lengkap', { ascending: true });
+    
+            if (error) throw error;
+            dosenData = data || [];
+            
+            renderDosenCards();
+        } catch (error) {
+            console.error('Error loading data:', error);
+            alert('Gagal memuat data dari database.');
+        }
+    }   
                
         function renderDosenCards() {
             const grid = document.getElementById('dosenGrid');
@@ -378,11 +359,7 @@ async function loadData() {
             `).join('');
         }
         
-        function updateStats() {
-            const statEl = document.getElementById('statDosen');
-            if (statEl) statEl.textContent = dosenData.length;
-        }
-        
+
         function getProdiColor(prodi) {
             const colors = {
                 'akuntansi': 'bg-blue-500/20 text-blue-400',
