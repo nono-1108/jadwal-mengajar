@@ -171,7 +171,7 @@
                         Jurusan Ekonomi dan Studi Pembangunan
                     </p>
                     <p class="text-base md:text-lg text-slate-400">
-                        Semester 2024/2025
+                        Semester Gasal 2026/2027
                     </p>
                 </div>
             </div>
@@ -245,7 +245,6 @@
                     </p>
                 </div>
 
-                <!-- Footer Info -->
                 <p class="text-xs text-slate-500 text-center mt-8 px-2 leading-relaxed">
                     Login menggunakan akun admin Anda untuk mengakses dashboard manajemen jadwal dosen. <br />
                     <span class="text-brand-primary font-medium">Akses terbatas untuk admin.</span>
@@ -259,11 +258,9 @@
         const ADMIN_CREDENTIALS = {
             username: 'admin',
             password: 'admin123',
-            // bisa tambah lebih banyak akun:
-            // username2: 'password2'
+
         };
 
-        // Check jika sudah login, langsung arahkan ke admin.html
         if (sessionStorage.getItem('adminLoggedIn') === 'true') {
             window.location.href = 'admin.html';
         }
@@ -278,7 +275,7 @@
         const passwordInput = document.getElementById('password');
         const rememberCheckbox = document.getElementById('remember');
 
-        // Load saved username if "Ingat Saya" was checked
+
         window.addEventListener('DOMContentLoaded', () => {
             const savedUsername = localStorage.getItem('adminUsername');
             if (savedUsername) {
