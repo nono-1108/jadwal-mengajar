@@ -16,6 +16,7 @@ export default defineConfig({
     // Tambahkan pengaturan port untuk mode preview
     preview: {
         port: 5010,
-        strictPort: true
+        strictPort: true,
+        host: true
     }
 })
