@@ -12,5 +12,10 @@ export default defineConfig({
                 adminLogin: resolve(__dirname, 'admin-login.html')
             }
         }
+    }, // <-- Pastikan ada tanda koma di sini
+    // Tambahkan pengaturan port untuk mode preview
+    preview: {
+        port: 5010,
+        strictPort: true
     }
 })
