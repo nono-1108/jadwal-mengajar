@@ -17,7 +17,7 @@ export default defineConfig({
     preview: {
         port: 5010,
         strictPort: true,
-        host: true
+        host: true,
         allowedHosts: ['jadwal-mengajar.nono1980.site']
     }
 })
